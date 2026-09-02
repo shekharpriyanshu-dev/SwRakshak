@@ -1,0 +1,6 @@
+{
+  "name": "SwRakshak",
+  "description": "Provider Telehealth & Clinical EHR Platform for Hospitals, Clinics, and Private Doctors - Featuring Remote Patient Lab Uploads, Vitals Tracking, and Live Video Consultations",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
