@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { initialDoctors, initialPatients } from './data/mockData';
 import { api } from './utils/api';
 import {
@@ -890,6 +891,9 @@ export default function App() {
           <span className="font-medium tracking-wide">{toastMessage}</span>
         </div>
       )}
+      
+      {/* Vercel Web Analytics */}
+      <Analytics />
     </div>
   );
 }
