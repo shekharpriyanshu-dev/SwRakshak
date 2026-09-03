@@ -15,7 +15,7 @@ import {
   updateLabTestReview,
   updatePatient,
   updateVideoConsultation,
-} from './db';
+} from './db.js';
 
 const router = Router();
 

@@ -1,20 +1,16 @@
+import dotenv from 'dotenv';
+// Load environment variables in order of specificity
+dotenv.config({ path: '.env.development.local' });
+dotenv.config({ path: '.env.local' });
+dotenv.config();
+
 import express from 'express';
-import cors from 'cors';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
-import apiRouter from './server/routes';
-import { initDatabase } from './server/db';
+import app from './server/app.js';
+import { initDatabase } from './server/db.js';
 
-const app = express();
 const PORT = 3000;
-
-// Enable CORS and JSON parsing
-app.use(cors());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-
-// Mount API routes FIRST
-app.use('/api', apiRouter);
 
 // Initialize server and database
 export async function startServer() {

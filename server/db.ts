@@ -1,8 +1,8 @@
-import { DatabaseSync } from 'node:sqlite';
+import { createRequire } from 'module';
 import pg from 'pg';
 import path from 'path';
 import fs from 'fs';
-import { initialDoctors, initialPatients } from '../src/data/mockData';
+import { initialDoctors, initialPatients } from '../src/data/mockData.js';
 import {
   ClinicalRecord,
   DoctorProfile,
@@ -13,36 +13,63 @@ import {
   VideoConsultationSession,
   VitalTrendPoint,
   Vitals,
-} from '../src/types';
+} from '../src/types.js';
 
-// Detect whether to use PostgreSQL (if DATABASE_URL is configured) or embedded SQLite
-const isPostgres = Boolean(process.env.DATABASE_URL);
+// Check whether DATABASE_URL is configured for PostgreSQL
+function isPostgresConfigured(): boolean {
+  const url = process.env.DATABASE_URL;
+  if (!url || typeof url !== 'string') return false;
+  const trimmed = url.trim();
+  // Filter out empty strings or masked asterisk strings
+  if (trimmed.length > 0 && !trimmed.includes('*')) {
+    return trimmed.startsWith('postgres://') || trimmed.startsWith('postgresql://');
+  }
+  return false;
+}
+
+let activeDbType: 'postgres' | 'sqlite' = isPostgresConfigured() ? 'postgres' : 'sqlite';
 let pgPool: pg.Pool | null = null;
-let sqliteDb: DatabaseSync | null = null;
+let sqliteDb: any = null;
 
 export function getDbType(): 'postgres' | 'sqlite' {
-  return isPostgres ? 'postgres' : 'sqlite';
+  return activeDbType;
+}
+
+function getPgPool(): pg.Pool {
+  if (!pgPool) {
+    const connStr = process.env.DATABASE_URL!;
+    const isSslDisabled = connStr.includes('sslmode=disable');
+    pgPool = new pg.Pool({
+      connectionString: connStr,
+      ssl: isSslDisabled ? false : { rejectUnauthorized: false },
+      max: 10,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
+    });
+
+    pgPool.on('error', (err) => {
+      console.error('[PostgreSQL] Unexpected error on pool client:', err.message);
+    });
+  }
+  return pgPool;
+}
+
+function getSqliteDb() {
+  if (!sqliteDb) {
+    const req = typeof require === 'function' ? require : createRequire(import.meta.url);
+    const { DatabaseSync } = req('node:sqlite');
+    const dbPath = path.resolve(process.cwd(), 'swrakshak.db');
+    sqliteDb = new DatabaseSync(dbPath);
+  }
+  return sqliteDb;
 }
 
 // Initialize Database Connection
 export function getDbConnection() {
-  if (isPostgres) {
-    if (!pgPool) {
-      pgPool = new pg.Pool({
-        connectionString: process.env.DATABASE_URL,
-        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
-      });
-      pgPool.on('error', (err) => {
-        console.error('Unexpected error on idle PostgreSQL client', err);
-      });
-    }
-    return { type: 'postgres' as const, client: pgPool };
+  if (activeDbType === 'postgres') {
+    return { type: 'postgres' as const, client: getPgPool() };
   } else {
-    if (!sqliteDb) {
-      const dbPath = path.resolve(process.cwd(), 'swrakshak.db');
-      sqliteDb = new DatabaseSync(dbPath);
-    }
-    return { type: 'sqlite' as const, client: sqliteDb };
+    return { type: 'sqlite' as const, client: getSqliteDb() };
   }
 }
 
@@ -97,7 +124,23 @@ async function executeBatchDDL(statements: string[]): Promise<void> {
 
 // Initialize tables and seed initial data
 export async function initDatabase(): Promise<void> {
-  const isPg = isPostgres;
+  if (isPostgresConfigured()) {
+    activeDbType = 'postgres';
+    const pool = getPgPool();
+    try {
+      const client = await pool.connect();
+      await client.query('SELECT 1');
+      client.release();
+      console.log('[Database] Connected to PostgreSQL instance via DATABASE_URL.');
+    } catch (err: any) {
+      console.error(`[Database] PostgreSQL connection notice: ${err.message}`);
+      // Maintain postgres mode, do NOT switch to SQLite
+    }
+  } else {
+    activeDbType = 'sqlite';
+  }
+
+  const isPg = activeDbType === 'postgres';
   console.log(`[Database] Initializing SQL Database (${isPg ? 'PostgreSQL' : 'SQLite'})...`);
 
   // Table DDL definitions
