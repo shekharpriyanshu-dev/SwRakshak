@@ -189,6 +189,45 @@ export interface DoctorProfile {
   specialty?: string;
   email?: string;
   phone?: string;
+  qualifications?: string;
+  experienceYears?: number;
+  aboutBio?: string;
+  opdTimings?: string;
+  consultationFee?: number;
+  rating?: number;
+  reviewCount?: number;
+  expertise?: string[];
+  education?: string[];
+  achievements?: string[];
+}
+
+export interface ConsultationToken {
+  id: string;
+  tokenNumber: number;
+  tokenCode: string;
+  patientId: string;
+  patientName: string;
+  patientAge: number;
+  patientGender: string;
+  patientPhone: string;
+  patientEmail?: string;
+  doctorId: string;
+  doctorName: string;
+  doctorSpecialty: string;
+  doctorDepartment: string;
+  room: string;
+  consultationType: 'Online Video Consult' | 'In-Hospital OPD';
+  bookingDate: string;
+  bookingTime: string;
+  slotTime: string;
+  expectedTime: string;
+  estimatedWaitMinutes: number;
+  queueAheadCount: number;
+  chiefComplaint: string;
+  status: 'Booked' | 'In Consultation' | 'Completed' | 'Cancelled';
+  paymentStatus: 'Exempt / Hospital Free OPD' | 'Paid Online' | 'Pay at Clinic';
+  virtualRoomCode?: string;
+  notes?: string;
 }
 
 export interface MedicineAlarm {
@@ -214,7 +253,9 @@ export type PatientSection =
   | 'alarms'
   | 'meals'
   | 'medicine-search'
-  | 'records';
+  | 'records'
+  | 'doctor-profile'
+  | 'token-booking';
 
 export type ActiveTab =
   | 'landing'
@@ -233,7 +274,9 @@ export type ActiveTab =
   | 'meals'
   | 'alarms'
   | 'medicine-search'
-  | 'auth';
+  | 'auth'
+  | 'doctor-profile'
+  | 'token-booking';
 
 export interface CustomInfoCard {
   id: string;

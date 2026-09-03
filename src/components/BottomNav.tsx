@@ -45,6 +45,19 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           <span className="font-['Inter'] text-[10px] font-medium leading-none">My Health</span>
         </button>
 
+        {/* Token Booking */}
+        <button
+          onClick={() => setActiveTab('token-booking')}
+          className={`flex flex-col items-center justify-center transition-all ${
+            activeTab === 'token-booking'
+              ? 'bg-amber-500/20 text-amber-200 border border-amber-400/40 shadow-[0_0_12px_rgba(245,158,11,0.2)] rounded-full px-3 py-1.5'
+              : 'text-white/40 px-3 py-1 hover:text-white/80'
+          }`}
+        >
+          <span className="material-symbols-outlined mb-0.5 text-[20px]">confirmation_number</span>
+          <span className="font-['Inter'] text-[10px] font-medium leading-none">Token</span>
+        </button>
+
         {/* Switch Patient */}
         {onOpenPatientLogin && (
           <button
@@ -146,6 +159,24 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           receipt_long
         </span>
         <span className="font-['Inter'] text-[10px] font-medium leading-none">Records</span>
+      </button>
+
+      {/* Token Booking */}
+      <button
+        onClick={() => setActiveTab('token-booking')}
+        className={`flex flex-col items-center justify-center transition-all ${
+          activeTab === 'token-booking'
+            ? 'bg-amber-500/20 text-amber-200 border border-amber-400/40 shadow-[0_0_12px_rgba(245,158,11,0.2)] rounded-full px-3 py-1 scale-95'
+            : 'text-white/40 px-3 py-1 hover:text-white/80'
+        }`}
+      >
+        <span
+          className="material-symbols-outlined mb-0.5 text-[20px]"
+          style={{ fontVariationSettings: activeTab === 'token-booking' ? "'FILL' 1" : "'FILL' 0" }}
+        >
+          confirmation_number
+        </span>
+        <span className="font-['Inter'] text-[10px] font-medium leading-none">Tokens</span>
       </button>
 
       {/* Profile */}

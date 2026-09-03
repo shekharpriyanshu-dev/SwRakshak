@@ -14,10 +14,13 @@ import { MedicineSearchView } from './MedicineSearchView';
 import { VitalsTrendsChart } from './VitalsTrendsChart';
 import { LabUploadView } from './LabUploadView';
 import { VideoConsultationModal } from './VideoConsultationModal';
+import { DoctorDetailProfileTab } from './DoctorDetailProfileTab';
+import { TokenBookingView } from './TokenBookingView';
 
 interface PatientPortalViewProps {
   patient: Patient;
   currentDoctor?: DoctorProfile;
+  allDoctors?: DoctorProfile[];
   onOpenReportModal: (record: ClinicalRecord) => void;
   onOpenLabResultsModal: (record: ClinicalRecord) => void;
   onSwitchToDoctorLogin: () => void;
@@ -30,6 +33,7 @@ interface PatientPortalViewProps {
 export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
   patient,
   currentDoctor,
+  allDoctors,
   onOpenReportModal,
   onOpenLabResultsModal,
   onSwitchToDoctorLogin,
@@ -107,6 +111,13 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
 
           <div className="flex items-center gap-3 w-full md:w-auto justify-end flex-wrap">
             <button
+              onClick={() => setActiveSection('token-booking')}
+              className="px-4 py-2.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white font-mono text-xs font-bold uppercase tracking-wider shadow-lg shadow-orange-900/40 hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer border border-white/20"
+            >
+              <span className="material-symbols-outlined text-[17px]">confirmation_number</span>
+              Book Token 🎟️
+            </button>
+            <button
               onClick={() => setIsVideoModalOpen(true)}
               className="px-4 py-2.5 rounded-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-mono text-xs font-bold uppercase tracking-wider shadow-lg shadow-cyan-900/40 hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
             >
@@ -150,13 +161,22 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
                   {patient.assignedDoctorName || 'Dr. Rajesh Sharma'}
                 </span>
               </div>
-              <button
-                onClick={() => setIsVideoModalOpen(true)}
-                className="text-[11px] font-mono font-bold text-cyan-300 hover:text-cyan-200 flex items-center gap-0.5"
-              >
-                <span className="material-symbols-outlined text-[14px]">videocam</span>
-                Call Now
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsVideoModalOpen(true)}
+                  className="text-[11px] font-mono font-bold text-cyan-300 hover:text-cyan-200 flex items-center gap-0.5 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[14px]">videocam</span>
+                  Call
+                </button>
+                <button
+                  onClick={() => setActiveSection('doctor-profile')}
+                  className="text-[11px] font-mono font-bold text-purple-300 hover:text-purple-200 flex items-center gap-0.5 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[14px]">info</span>
+                  Bio
+                </button>
+              </div>
             </div>
           </div>
 
@@ -224,6 +244,30 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
         >
           <span className="material-symbols-outlined text-[16px]">videocam</span>
           Live Video Consult 📹
+        </button>
+
+        <button
+          onClick={() => setActiveSection('doctor-profile')}
+          className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap border flex items-center gap-1.5 ${
+            activeSection === 'doctor-profile'
+              ? 'bg-gradient-to-r from-purple-600 via-indigo-600 to-orange-500 text-white border-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.4)]'
+              : 'bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 border-purple-500/30'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[16px]">stethoscope</span>
+          Doctor Profile 👨‍⚕️
+        </button>
+
+        <button
+          onClick={() => setActiveSection('token-booking')}
+          className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap border flex items-center gap-1.5 ${
+            activeSection === 'token-booking'
+              ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-purple-600 text-white border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.4)]'
+              : 'bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 border-amber-500/30'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[16px]">confirmation_number</span>
+          Book OPD/Online Token 🎟️
         </button>
 
         <button
@@ -817,6 +861,61 @@ export const PatientPortalView: React.FC<PatientPortalViewProps> = ({
               ))}
             </div>
           </div>
+        </section>
+      )}
+
+      {/* SECTION: DOCTOR DETAILED PROFILE WITH TABS */}
+      {activeSection === 'doctor-profile' && (
+        <section className="space-y-6 animate-fadeIn">
+          <DoctorDetailProfileTab
+            doctor={
+              currentDoctor ||
+              (allDoctors && allDoctors[0]) || {
+                id: 'doc-1',
+                name: patient.assignedDoctorName || 'Dr. Rajesh Sharma',
+                specialty: 'Cardiology & Vascular Medicine',
+                department: 'Cardiovascular Science Center',
+                hospital: 'SwRakshak Central Multispeciality Hospital',
+                room: 'Room 402, OPD Wing B',
+                consultationFee: 500,
+                rating: 4.9,
+                reviewCount: 312,
+                avatarUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=250&auto=format&fit=crop&q=80',
+                opdTimings: 'Mon - Fri: 09:30 AM – 01:30 PM | Sat: 10:00 AM – 02:00 PM',
+                aboutBio:
+                  'Senior Interventional Cardiologist with over 18 years of clinical expertise in acute coronary syndromes, echocardiography, hypertension, and preventive cardiac healthcare.',
+                qualifications: ['MBBS (AIIMS Delhi)', 'MD (Internal Medicine)', 'DM (Cardiology, PGI)', 'FACC (USA)'],
+              }
+            }
+            allDoctors={allDoctors}
+            onBookToken={(doc) => setActiveSection('token-booking')}
+            onStartVideoConsult={() => setIsVideoModalOpen(true)}
+            onUploadLabTest={() => setActiveSection('lab-upload')}
+          />
+        </section>
+      )}
+
+      {/* SECTION: PRINTABLE ONLINE CONSULTATION TOKEN BOOKING */}
+      {activeSection === 'token-booking' && (
+        <section className="space-y-6 animate-fadeIn">
+          <TokenBookingView
+            doctors={
+              allDoctors && allDoctors.length > 0
+                ? allDoctors
+                : currentDoctor
+                ? [currentDoctor]
+                : []
+            }
+            currentPatient={patient}
+            selectedDoctor={currentDoctor}
+            onNavigateToTab={(tab) => {
+              if (tab === 'my-health') setActiveSection('overview');
+            }}
+            onStartVideoConsult={(doc, token) => {
+              setIsVideoModalOpen(true);
+            }}
+            showToast={showToast}
+          />
         </section>
       )}
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { UserRole, DoctorProfile, Patient } from '../types';
 import { CompanyFooter } from './CompanyFooter';
+import { SwRakshakLogo } from './SwRakshakLogo';
 
 interface AuthPageProps {
   onLoginDoctor: (doctor: DoctorProfile) => void;
@@ -181,26 +182,15 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       {/* Top Navbar */}
       <header className="w-full border-b border-white/10 bg-[#09040c]/80 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between">
-          {/* Brand Logo & Name */}
+          {/* Brand Logo & Name (Adjusted on top with name in small) */}
           <div className="flex items-center gap-3 cursor-pointer" onClick={onCancel}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-cyan-400 p-0.5 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.45)] hover:scale-105 transition-transform">
-              <div className="w-full h-full rounded-[10px] bg-[#0c0612] flex items-center justify-center">
-                <span className="material-symbols-outlined text-white text-[22px]">
-                  health_and_safety
-                </span>
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-bold font-mono tracking-tight text-white">
-                  SwRakshak
-                </span>
-                <span className="px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-500/30 text-[10px] font-mono font-bold text-purple-300 uppercase">
-                  HEALTH PLATFORM
-                </span>
-              </div>
-              <span className="text-[11px] font-mono text-white/50 block -mt-0.5">
-                Hospital Information & Patient Care System
+            <SwRakshakLogo size={36} showName={true} nameInSmall={true} showSubtitle={true} />
+            <div className="hidden sm:flex flex-col pl-2 border-l border-white/10">
+              <span className="px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-500/30 text-[9px] font-mono font-bold text-purple-300 uppercase">
+                HEALTH PLATFORM
+              </span>
+              <span className="text-[10px] font-mono text-white/50 block -mt-0.5">
+                Hospital & Patient Care System
               </span>
             </div>
           </div>
@@ -235,18 +225,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-purple-600 via-indigo-500 to-cyan-400"></div>
 
             {/* App Name & Branding Presentation on Top of Card */}
-            <div className="text-center mb-8 pt-2">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-cyan-500 p-0.5 shadow-[0_0_25px_rgba(168,85,247,0.5)] mb-3">
-                <div className="w-full h-full rounded-[14px] bg-[#0c0612] flex items-center justify-center">
-                  <span className="material-symbols-outlined text-white text-[30px]">
-                    medical_services
-                  </span>
-                </div>
+            <div className="text-center mb-8 pt-2 flex flex-col items-center">
+              <div className="mb-2">
+                <SwRakshakLogo size={56} showName={true} nameInSmall={false} showSubtitle={true} />
               </div>
-              <h1 className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-white">
-                SwRakshak
-              </h1>
-              <p className="text-xs sm:text-sm text-purple-200/70 mt-1 max-w-md mx-auto">
+              <p className="text-xs sm:text-sm text-purple-200/70 mt-2 max-w-md mx-auto">
                 Secure Unified Portal for Clinical EHR, Diagnostic Telemetry & Remote Consultations
               </p>
             </div>

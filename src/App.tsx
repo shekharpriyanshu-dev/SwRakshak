@@ -21,6 +21,8 @@ import { PatientsView } from './components/PatientsView';
 import { RecordsView } from './components/RecordsView';
 import { ProfileView } from './components/ProfileView';
 import { PatientPortalView } from './components/PatientPortalView';
+import { DoctorDetailProfileTab } from './components/DoctorDetailProfileTab';
+import { TokenBookingView } from './components/TokenBookingView';
 import { VideoConsultationModal } from './components/VideoConsultationModal';
 import { AuthPage } from './components/AuthPage';
 import { LandingPage } from './components/LandingPage';
@@ -648,10 +650,51 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-grow flex flex-col relative z-10">
+        {/* STANDALONE DEDICATED TOKEN BOOKING VIEW */}
+        {activeTab === 'token-booking' && (
+          <TokenBookingView
+            doctors={doctors}
+            currentPatient={userRole === 'patient' ? currentPatient : selectedPatient}
+            selectedDoctor={currentDoctor}
+            onNavigateToTab={(tab) => setActiveTab(tab)}
+            onStartVideoConsult={(doc) => {
+              handleSelectDoctor(doc);
+              setIsDoctorVideoModalOpen(true);
+            }}
+            showToast={showToast}
+          />
+        )}
+
+        {/* STANDALONE DOCTOR DETAIL PROFILE TAB VIEW */}
+        {activeTab === 'doctor-profile' && (
+          <div className="flex-grow w-full max-w-6xl mx-auto px-4 py-8">
+            <DoctorDetailProfileTab
+              doctor={currentDoctor}
+              allDoctors={doctors}
+              onBookToken={() => setActiveTab('token-booking')}
+              onStartVideoConsult={() => {
+                if (userRole === 'patient') {
+                  showToast('Connecting to Doctor consultation line...');
+                } else {
+                  setIsDoctorVideoModalOpen(true);
+                }
+              }}
+              onUploadLabTest={() => {
+                if (userRole === 'patient') {
+                  setActiveTab('my-health');
+                } else {
+                  setActiveTab('records');
+                }
+              }}
+            />
+          </div>
+        )}
+
         {/* PATIENT ROLE VIEW */}
-        {userRole === 'patient' && currentPatient && (
+        {userRole === 'patient' && currentPatient && activeTab !== 'token-booking' && activeTab !== 'doctor-profile' && (
           <PatientPortalView
             patient={currentPatient}
+            allDoctors={doctors}
             onOpenReportModal={(rec) => setActiveReportRecord(rec)}
             onOpenLabResultsModal={(rec) => setActiveLabRecord(rec)}
             onSwitchToDoctorLogin={() => setIsDoctorSwitchOpen(true)}
@@ -668,7 +711,7 @@ export default function App() {
         )}
 
         {/* DOCTOR ROLE VIEWS */}
-        {userRole === 'doctor' && (
+        {userRole === 'doctor' && activeTab !== 'token-booking' && activeTab !== 'doctor-profile' && (
           <>
             {activeTab === 'dashboard' && (
               <DashboardView

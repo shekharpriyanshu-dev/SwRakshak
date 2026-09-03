@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DoctorProfile, Patient, CustomInfoCard } from '../types';
 import { CompanyFooter } from './CompanyFooter';
+import { SwRakshakLogo } from './SwRakshakLogo';
 
 interface LandingPageProps {
   onEnterAuth: (mode?: 'login' | 'signup') => void;
@@ -169,26 +170,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <header className="w-full border-b border-white/10 bg-[#08030c]/85 backdrop-blur-xl sticky top-0 z-40 transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           
-          {/* Brand Logo & Name */}
-          <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-500 to-cyan-400 p-0.5 flex items-center justify-center shadow-[0_0_25px_rgba(168,85,247,0.5)]">
-              <div className="w-full h-full rounded-[14px] bg-[#0c0512] flex items-center justify-center">
-                <span className="material-symbols-outlined text-white text-[24px]">
-                  health_and_safety
-                </span>
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold font-mono tracking-tight text-white">
-                  SwRakshak
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-mono font-bold text-emerald-300 uppercase tracking-wide">
+          {/* Brand Logo & Name (Adjusted on top with small name) */}
+          <div className="flex items-center gap-3">
+            <SwRakshakLogo size={38} showName={true} nameInSmall={true} showSubtitle={true} />
+            <div className="hidden sm:flex flex-col pl-2 border-l border-white/10">
+              <div className="flex items-center gap-1.5">
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[9px] font-mono font-bold text-emerald-300 uppercase tracking-wide">
                   LIVE EHR
                 </span>
+                <span className="px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-[9px] font-mono font-medium text-cyan-300 hidden md:inline-block">
+                  TELE-CARE
+                </span>
               </div>
-              <span className="text-[11px] font-mono text-white/50 block -mt-0.5">
-                Clinical Health & Telemedicine Ecosystem
+              <span className="text-[10px] font-mono text-white/50 block -mt-0.5">
+                Hospital Telemedicine Platform
               </span>
             </div>
           </div>

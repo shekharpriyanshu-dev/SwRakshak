@@ -1,4 +1,5 @@
 import React from 'react';
+import { SwRakshakLogo } from './SwRakshakLogo';
 
 interface CompanyFooterProps {
   onOpenAuth?: () => void;
@@ -21,23 +22,7 @@ export const CompanyFooter: React.FC<CompanyFooterProps> = ({ onOpenAuth, classN
           
           {/* Column 1: Company Info & Branding (2 cols on lg) */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-orange-500 p-0.5 flex items-center justify-center shadow-[0_0_15px_rgba(168,85,247,0.4)] shrink-0">
-                <div className="w-full h-full rounded-[10px] bg-[#0c0611] flex items-center justify-center">
-                  <span className="material-symbols-outlined text-white text-[20px]">
-                    health_and_safety
-                  </span>
-                </div>
-              </div>
-              <div>
-                <span className="text-xl font-bold font-mono tracking-tight text-white block">
-                  SwRakshak
-                </span>
-                <span className="text-[10px] text-purple-300 font-mono block -mt-0.5">
-                  Clinical EHR & Telehealth Ecosystem
-                </span>
-              </div>
-            </div>
+            <SwRakshakLogo size={36} showName={true} nameInSmall={true} showSubtitle={true} />
 
             <p className="text-white/60 text-xs leading-relaxed max-w-sm">
               SwRakshak Technologies is India’s next-generation cloud-native Hospital Information & Telemedicine Platform, empowering multispeciality hospital networks, private clinics, and remote patients with unified clinical records, lab telemetry, and encrypted consultations.

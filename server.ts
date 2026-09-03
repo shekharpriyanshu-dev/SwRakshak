@@ -36,9 +36,27 @@ export async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`[Server] SwRakshak running on http://0.0.0.0:${PORT}`);
   });
+
+  server.on('error', (err: any) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`[Server] Port ${PORT} is already in use. Exiting process so supervisor can restart cleanly.`);
+      process.exit(1);
+    } else {
+      console.error('[Server] Unexpected server error:', err);
+    }
+  });
+
+  const cleanup = () => {
+    server.close(() => {
+      process.exit(0);
+    });
+  };
+
+  process.on('SIGTERM', cleanup);
+  process.on('SIGINT', cleanup);
 }
 
 // Only start listening if run directly (e.g. node server.ts / tsx server.ts)

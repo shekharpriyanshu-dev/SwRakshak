@@ -99,3 +99,46 @@ h1, h2, h3, h4, .font-headline-lg, .font-headline-md {
   background: rgba(255, 255, 255, 0.3);
 }
 
+/* Print Optimization for Printable Token Slip & Records */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* Hide everything marked no-print or extraneous navigation */
+  .no-print,
+  header,
+  footer,
+  nav,
+  .fixed {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Target printable token area */
+  #printable-hospital-token,
+  .printable-token-area {
+    border: 1px solid #999999 !important;
+    box-shadow: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 16px !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  @page {
+    size: auto;
+    margin: 12mm;
+  }
+}
+
+

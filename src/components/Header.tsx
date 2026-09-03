@@ -1,5 +1,6 @@
 import React from 'react';
 import { ActiveTab, UserRole, DoctorProfile, Patient } from '../types';
+import { SwRakshakLogo } from './SwRakshakLogo';
 
 interface HeaderProps {
   activeTab: ActiveTab;
@@ -35,59 +36,48 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="flex items-center justify-between px-4 sm:px-8 h-20 w-full max-w-7xl mx-auto">
         {/* Left: Brand Logo & Title */}
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setActiveTab('landing')}
-            aria-label="SwRakshak First Appearance Page"
-            title="SwRakshak First Page & About"
-            className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-600 to-orange-400 p-0.5 flex items-center justify-center shadow-[0_0_16px_rgba(168,85,247,0.4)] hover:scale-105 transition-transform cursor-pointer shrink-0"
-          >
-            <div className="w-full h-full rounded-full bg-[#0a050b]/40 flex items-center justify-center">
-              <span className="material-symbols-outlined text-white text-[20px]">
-                {userRole === 'doctor' ? 'clinical_notes' : 'health_and_safety'}
-              </span>
-            </div>
-          </button>
-
           <div
             onClick={() => setActiveTab('landing')}
             title="Go to SwRakshak First Page"
-            className="flex flex-col cursor-pointer select-none hover:opacity-90 transition-opacity"
+            className="flex items-center gap-3 cursor-pointer select-none hover:opacity-95 transition-opacity"
           >
-            <div className="flex items-center gap-2">
-              <span className="text-lg md:text-xl font-bold tracking-tight text-white font-mono">
-                SwRakshak
-              </span>
-              <span
-                className={`px-2 py-0.5 text-[10px] font-bold tracking-widest rounded-full uppercase border hidden sm:inline-block ${
-                  userRole === 'doctor'
-                    ? 'bg-purple-500/20 text-purple-200 border-purple-500/30'
-                    : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
-                }`}
-              >
-                {userRole === 'doctor' ? 'DOCTOR HUB' : 'PATIENT PORTAL'}
-              </span>
+            {/* Logo Emblem with small name and since 2026 */}
+            <SwRakshakLogo size={36} showName={true} nameInSmall={true} showSubtitle={true} />
 
-              {dbType && (
+            <div className="flex flex-col justify-center pl-1 border-l border-white/10">
+              <div className="flex items-center gap-1.5">
                 <span
-                  title={
-                    dbType === 'postgres'
-                      ? 'Connected to PostgreSQL Database'
-                      : 'Connected to local SQLite SQL Database (swrakshak.db)'
-                  }
-                  className="px-2 py-0.5 text-[9px] font-mono font-semibold tracking-wider rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hidden md:inline-flex items-center gap-1"
+                  className={`px-2 py-0.5 text-[9px] font-bold tracking-widest rounded-full uppercase border hidden sm:inline-block ${
+                    userRole === 'doctor'
+                      ? 'bg-purple-500/20 text-purple-200 border-purple-500/30'
+                      : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+                  }`}
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block" />
-                  SQL: {dbType === 'postgres' ? 'POSTGRESQL' : 'SQLITE'}
+                  {userRole === 'doctor' ? 'DOCTOR HUB' : 'PATIENT PORTAL'}
                 </span>
-              )}
+
+                {dbType && (
+                  <span
+                    title={
+                      dbType === 'postgres'
+                        ? 'Connected to PostgreSQL Database'
+                        : 'Connected to local SQLite SQL Database (swrakshak.db)'
+                    }
+                    className="px-2 py-0.5 text-[9px] font-mono font-semibold tracking-wider rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hidden md:inline-flex items-center gap-1"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block" />
+                    SQL: {dbType === 'postgres' ? 'POSTGRESQL' : 'SQLITE'}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] font-mono text-white/50 -mt-0.5 hidden sm:block">
+                {userRole === 'doctor'
+                  ? `${currentDoctor.name} • ${currentDoctor.department}`
+                  : currentPatient
+                  ? `${currentPatient.name} (${currentPatient.id})`
+                  : 'Patient Medical Access'}
+              </span>
             </div>
-            <span className="text-[11px] font-mono text-white/50 -mt-0.5 hidden sm:block">
-              {userRole === 'doctor'
-                ? `${currentDoctor.name} • ${currentDoctor.department}`
-                : currentPatient
-                ? `${currentPatient.name} (${currentPatient.id})`
-                : 'Patient Medical Access'}
-            </span>
           </div>
         </div>
 
@@ -136,6 +126,17 @@ export const Header: React.FC<HeaderProps> = ({
               Clinical Records
             </button>
             <button
+              onClick={() => setActiveTab('token-booking')}
+              className={`px-3.5 py-2 rounded-full text-xs font-semibold tracking-wider uppercase transition-all flex items-center gap-1 cursor-pointer ${
+                activeTab === 'token-booking'
+                  ? 'bg-amber-500/20 text-amber-200 border border-amber-400/40 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
+                  : 'text-white/60 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[15px]">confirmation_number</span>
+              <span>OPD Tokens</span>
+            </button>
+            <button
               onClick={() => setActiveTab('profile')}
               className={`px-4 py-2 rounded-full text-xs font-semibold tracking-wider uppercase transition-all ${
                 activeTab === 'profile'
@@ -170,13 +171,33 @@ export const Header: React.FC<HeaderProps> = ({
                   : 'text-white/60 hover:text-white hover:bg-white/5'
               }`}
             >
-              My Health & Suggestions
+              My Health & Care
+            </button>
+            <button
+              onClick={() => setActiveTab('token-booking')}
+              className={`px-3.5 py-2 rounded-full text-xs font-semibold tracking-wider uppercase transition-all flex items-center gap-1 cursor-pointer ${
+                activeTab === 'token-booking'
+                  ? 'bg-amber-500/20 text-amber-200 border border-amber-400/40 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
+                  : 'text-white/60 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[15px]">confirmation_number</span>
+              <span>Book Token 🎟️</span>
             </button>
           </nav>
         )}
 
         {/* Right: Quick Role Switch & Action Buttons */}
         <div className="flex items-center gap-2 sm:gap-2.5">
+          {/* Quick Book Token Button */}
+          <button
+            onClick={() => setActiveTab('token-booking')}
+            title="Book Online or In-Hospital OPD Token Slip"
+            className="hidden sm:flex px-3 py-1.5 rounded-full bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-mono font-bold items-center gap-1.5 transition-all cursor-pointer hover:scale-105"
+          >
+            <span className="material-symbols-outlined text-[16px]">confirmation_number</span>
+            <span>Book Token</span>
+          </button>
           {/* Dedicated Login / Sign Up Page Link */}
           {onOpenAuthPage && (
             <button
