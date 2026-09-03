@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { initialDoctors, initialPatients } from './data/mockData';
+import { api } from './utils/api';
 import {
   ActiveTab,
   ClinicalRecord,
@@ -20,6 +21,9 @@ import { RecordsView } from './components/RecordsView';
 import { ProfileView } from './components/ProfileView';
 import { PatientPortalView } from './components/PatientPortalView';
 import { VideoConsultationModal } from './components/VideoConsultationModal';
+import { AuthPage } from './components/AuthPage';
+import { LandingPage } from './components/LandingPage';
+import { CompanyFooter } from './components/CompanyFooter';
 import {
   AddDoctorModal,
   AddDoctorObservationModal,
@@ -54,7 +58,8 @@ export default function App() {
     return 'doctor';
   });
 
-  const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('landing');
+  const [dbType, setDbType] = useState<string>('sqlite');
 
   // Multi-Doctor Registry State
   const [doctors, setDoctors] = useState<DoctorProfile[]>(() => {
@@ -101,6 +106,44 @@ export default function App() {
     }
     return initialPatients;
   });
+
+  // Fetch real data from Node.js + Express SQL Database API
+  useEffect(() => {
+    let isMounted = true;
+    async function loadSqlDatabaseData() {
+      try {
+        const healthRes = await api.checkHealth().catch(() => null);
+        if (isMounted && healthRes?.database) {
+          setDbType(healthRes.database);
+        }
+
+        const [apiDoctors, apiPatients] = await Promise.all([
+          api.getDoctors().catch(() => null),
+          api.getPatients().catch(() => null),
+        ]);
+
+        if (!isMounted) return;
+
+        if (apiDoctors && apiDoctors.length > 0) {
+          setDoctors(apiDoctors);
+          setCurrentDoctor((curr) => apiDoctors.find((d) => d.id === curr.id) || apiDoctors[0]);
+        }
+
+        if (apiPatients && apiPatients.length > 0) {
+          setPatients(apiPatients);
+          setSelectedPatient((curr) => apiPatients.find((p) => p.id === curr.id) || apiPatients[0]);
+          setCurrentPatient((curr) => (curr ? apiPatients.find((p) => p.id === curr.id) || apiPatients[0] : apiPatients[0]));
+        }
+      } catch (err) {
+        console.warn('[SwRakshak] Running in offline/cache mode:', err);
+      }
+    }
+
+    loadSqlDatabaseData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Selected Patient for Doctor View
   const [selectedPatient, setSelectedPatient] = useState<Patient>(() => {
@@ -236,6 +279,7 @@ export default function App() {
     setUserRole('doctor');
     setActiveTab('dashboard');
     showToast(`Registered and signed in as ${newDoc.name}`);
+    api.saveDoctor(newDoc).catch((err) => console.error('Failed to sync doctor to SQL DB:', err));
   };
 
   // Patient Login
@@ -245,6 +289,17 @@ export default function App() {
     setUserRole('patient');
     setActiveTab('my-health');
     showToast(`Welcome to SwRakshak Patient Portal, ${patient.name}`);
+  };
+
+  // Patient Registration from Auth Page
+  const handleRegisterPatient = (newPatient: Patient) => {
+    setPatients((prev) => [newPatient, ...prev]);
+    setCurrentPatient(newPatient);
+    setSelectedPatient(newPatient);
+    setUserRole('patient');
+    setActiveTab('my-health');
+    showToast(`Registered and signed in as ${newPatient.name}`);
+    api.createPatient(newPatient).catch((err) => console.error('Failed to sync patient to SQL DB:', err));
   };
 
   // Patient selection from doctor list
@@ -267,6 +322,7 @@ export default function App() {
       })
     );
     showToast(`New ${record.type} record saved for patient`);
+    api.addClinicalRecord(patientId, record).catch((err) => console.error('Failed to save record to SQL DB:', err));
   };
 
   // Save doctor suggestion / care advice
@@ -283,6 +339,7 @@ export default function App() {
       })
     );
     showToast(`Doctor advice published to patient portal`);
+    api.addDoctorSuggestion(patientId, suggestion).catch((err) => console.error('Failed to save suggestion to SQL DB:', err));
   };
 
   // Save prescription
@@ -299,22 +356,26 @@ export default function App() {
       })
     );
     showToast(`Prescription recorded for ${prescription.name}`);
+    api.addMedication(patientId, prescription).catch((err) => console.error('Failed to save medication to SQL DB:', err));
   };
 
   // Save confidential doctor observation (MD Only)
   const handleSaveObservation = (patientId: string, observation: string) => {
+    let updatedObservations: string[] = [];
     setPatients((prev) =>
       prev.map((p) => {
         if (p.id === patientId) {
+          updatedObservations = [observation, ...(p.doctorObservations || [])];
           return {
             ...p,
-            doctorObservations: [observation, ...(p.doctorObservations || [])],
+            doctorObservations: updatedObservations,
           };
         }
         return p;
       })
     );
     showToast(`Confidential internal MD observation saved`);
+    api.updatePatient(patientId, { doctorObservations: updatedObservations }).catch((err) => console.error('Failed to update observations in SQL DB:', err));
   };
 
   // Save vitals
@@ -328,6 +389,7 @@ export default function App() {
       })
     );
     showToast(`Vitals updated for ${selectedPatient.name}`);
+    api.recordVitals(patientId, newVitals).catch((err) => console.error('Failed to save vitals in SQL DB:', err));
   };
 
   // Update vitals history from patient portal
@@ -335,6 +397,7 @@ export default function App() {
     if (!currentPatient) return;
     const latest = updatedHistory[updatedHistory.length - 1];
 
+    let computedVitals: Patient['vitals'] = currentPatient.vitals;
     setPatients((prev) =>
       prev.map((p) => {
         if (p.id === currentPatient.id) {
@@ -363,6 +426,7 @@ export default function App() {
                   : {}),
               }
             : p.vitals;
+          computedVitals = updatedVitals;
 
           return {
             ...p,
@@ -373,6 +437,10 @@ export default function App() {
         return p;
       })
     );
+
+    if (latest) {
+      api.recordVitals(currentPatient.id, computedVitals, latest).catch((err) => console.error('Failed to sync vitals to SQL DB:', err));
+    }
   };
 
   // Update uploaded lab tests for a patient
@@ -388,6 +456,11 @@ export default function App() {
         return p;
       })
     );
+
+    const latest = updatedTests[0];
+    if (latest) {
+      api.uploadLabTest(patientId, latest).catch((err) => console.error('Failed to sync lab test to SQL DB:', err));
+    }
   };
 
   // Record completed video consultation
@@ -430,6 +503,9 @@ export default function App() {
       })
     );
     showToast(`Video consultation with ${session.patientName} saved to medical record`);
+
+    api.scheduleVideoConsultation(session).catch((err) => console.error('Failed to sync video consult to SQL DB:', err));
+    api.addClinicalRecord(patientId, consultRecord).catch((err) => console.error('Failed to sync consult record to SQL DB:', err));
   };
 
   // Register new patient
@@ -444,22 +520,27 @@ export default function App() {
     setSelectedPatient(patientWithDoc);
     setActiveTab('records');
     showToast(`Registered patient ${newPatient.name} (${newPatient.id})`);
+    api.createPatient(patientWithDoc).catch((err) => console.error('Failed to create patient in SQL DB:', err));
   };
 
   // Update doctor PIN
   const handleSaveDoctorPin = (newPin: string) => {
-    setCurrentDoctor((prev) => ({ ...prev, pin: newPin }));
+    const updated = { ...currentDoctor, pin: newPin };
+    setCurrentDoctor(updated);
     setDoctors((prev) =>
-      prev.map((d) => (d.id === currentDoctor.id ? { ...d, pin: newPin } : d))
+      prev.map((d) => (d.id === currentDoctor.id ? updated : d))
     );
     showToast('Security PIN successfully updated');
+    api.saveDoctor(updated).catch((err) => console.error('Failed to update doctor PIN in SQL DB:', err));
   };
 
   const handleUpdateDoctor = (updated: Partial<DoctorProfile>) => {
-    setCurrentDoctor((prev) => ({ ...prev, ...updated }));
+    const merged = { ...currentDoctor, ...updated };
+    setCurrentDoctor(merged);
     setDoctors((prev) =>
-      prev.map((d) => (d.id === currentDoctor.id ? { ...d, ...updated } : d))
+      prev.map((d) => (d.id === currentDoctor.id ? merged : d))
     );
+    api.saveDoctor(merged).catch((err) => console.error('Failed to update doctor profile in SQL DB:', err));
   };
 
   // Quick Open MRI Scan
@@ -483,6 +564,65 @@ export default function App() {
     setActiveReportRecord(scanRec);
   };
 
+  // Primary Landing & First Appearance Page (SwRakshak About, Services, Notices & Info Editor)
+  if (activeTab === 'landing') {
+    return (
+      <LandingPage
+        onEnterAuth={(mode) => {
+          setActiveTab('auth');
+        }}
+        onEnterDoctorHub={(doc) => {
+          if (doc) {
+            handleSelectDoctor(doc);
+          } else {
+            setUserRole('doctor');
+            setActiveTab('dashboard');
+          }
+          showToast(`Entered SwRakshak Doctor Hub`);
+        }}
+        onEnterPatientPortal={(pat) => {
+          if (pat) {
+            handleLoginPatient(pat);
+          } else {
+            setUserRole('patient');
+            setActiveTab('my-health');
+          }
+          showToast(`Entered SwRakshak Patient Portal`);
+        }}
+        doctors={doctors}
+        patients={patients}
+        showToast={showToast}
+      />
+    );
+  }
+
+  // Dedicated Authentication / Login & Signup Page
+  if (activeTab === 'auth') {
+    return (
+      <AuthPage
+        doctors={doctors}
+        patients={patients}
+        onLoginDoctor={(doc) => {
+          handleSelectDoctor(doc);
+        }}
+        onLoginPatient={(pat) => {
+          handleLoginPatient(pat);
+        }}
+        onRegisterDoctor={(newDoc) => {
+          handleAddDoctor(newDoc);
+        }}
+        onRegisterPatient={(newPat) => {
+          handleRegisterPatient(newPat);
+        }}
+        onCancel={() => {
+          setActiveTab('landing');
+        }}
+        showToast={showToast}
+        defaultRole={userRole}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0a050b] text-[#f0f0f0] flex flex-col font-['Inter'] relative selection:bg-purple-600/30 selection:text-white overflow-x-hidden">
       {/* Immersive UI Ambient Glowing Orbs */}
@@ -501,6 +641,8 @@ export default function App() {
         onOpenDoctorSwitchModal={() => setIsDoctorSwitchOpen(true)}
         onOpenPatientLoginModal={() => setIsPatientLoginOpen(true)}
         onSwitchRole={handleSwitchRole}
+        onOpenAuthPage={() => setActiveTab('auth')}
+        dbType={dbType}
       />
 
       {/* Main Content Area */}
@@ -574,7 +716,10 @@ export default function App() {
                 doctor={currentDoctor}
                 onUpdateDoctor={handleUpdateDoctor}
                 onOpenChangePinModal={() => setIsChangePinOpen(true)}
-                onLogout={() => setIsLocked(true)}
+                onLogout={() => {
+                  setActiveTab('auth');
+                  showToast('Logged out securely. Welcome to SwRakshak.');
+                }}
                 onEditPhoto={() => showToast('Doctor avatar photo edit enabled')}
                 showToast={showToast}
               />
@@ -582,6 +727,9 @@ export default function App() {
           </>
         )}
       </main>
+
+      {/* Reusable Corporate Healthcare Footer with Address, Mail, Emergency Helpline */}
+      <CompanyFooter onOpenAuth={() => setActiveTab('auth')} />
 
       {/* Mobile Bottom Navigation Bar */}
       <BottomNav
@@ -599,6 +747,7 @@ export default function App() {
           record={activeReportRecord}
           patient={userRole === 'patient' ? currentPatient : selectedPatient}
           onClose={() => setActiveReportRecord(null)}
+          showToast={showToast}
         />
       )}
 
@@ -608,6 +757,7 @@ export default function App() {
           record={activeLabRecord}
           patient={userRole === 'patient' ? currentPatient : selectedPatient}
           onClose={() => setActiveLabRecord(null)}
+          showToast={showToast}
         />
       )}
 

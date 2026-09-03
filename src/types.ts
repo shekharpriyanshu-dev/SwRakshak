@@ -217,6 +217,7 @@ export type PatientSection =
   | 'records';
 
 export type ActiveTab =
+  | 'landing'
   | 'dashboard'
   | 'patients'
   | 'records'
@@ -231,6 +232,18 @@ export type ActiveTab =
   | 'video-consult'
   | 'meals'
   | 'alarms'
-  | 'medicine-search';
+  | 'medicine-search'
+  | 'auth';
+
+export interface CustomInfoCard {
+  id: string;
+  title: string;
+  category: 'Announcement' | 'Clinic Hours' | 'Health Advisory' | 'Emergency Info' | 'Facility Update';
+  content: string;
+  author: string;
+  date: string;
+  contact?: string;
+  isPinned?: boolean;
+}
 
 

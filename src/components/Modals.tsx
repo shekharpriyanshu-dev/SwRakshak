@@ -908,28 +908,48 @@ interface AddPatientModalProps {
 }
 
 export const AddPatientModal: React.FC<AddPatientModalProps> = ({ onClose, onAddPatient }) => {
+  const [patientId, setPatientId] = useState(() => `PID-${Math.floor(10000 + Math.random() * 90000)}`);
+  const [pin, setPin] = useState('1234');
   const [name, setName] = useState('');
-  const [age, setAge] = useState(35);
-  const [dob, setDob] = useState('05/10/1989');
-  const [gender, setGender] = useState<'Female' | 'Male' | 'Other'>('Female');
+  const [phone, setPhone] = useState('+91 98');
+  const [email, setEmail] = useState('');
+  const [age, setAge] = useState(38);
+  const [dob, setDob] = useState('1986-04-12');
+  const [gender, setGender] = useState<'Female' | 'Male' | 'Other'>('Male');
   const [bloodType, setBloodType] = useState('O+');
   const [status, setStatus] = useState<Patient['status']>('Active');
+  const [complaint, setComplaint] = useState('Routine clinical intake and baseline vitals monitoring.');
+  const [copiedId, setCopiedId] = useState(false);
+
+  const handleRegenerateId = () => {
+    setPatientId(`PID-${Math.floor(10000 + Math.random() * 90000)}`);
+  };
+
+  const handleCopyId = () => {
+    navigator.clipboard?.writeText(patientId);
+    setCopiedId(true);
+    setTimeout(() => setCopiedId(false), 2500);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name) return;
+    if (!name.trim()) return;
 
-    const newId = `PID-${Math.floor(10000 + Math.random() * 90000)}`;
+    const assignedId = patientId.trim() || `PID-${Math.floor(10000 + Math.random() * 90000)}`;
 
     const newPatient: Patient = {
-      id: newId,
-      name,
-      age,
+      id: assignedId,
+      name: name.trim(),
+      pin: pin.trim() || '1234',
+      phone: phone.trim() || '+91 98000 00000',
+      email: email.trim() || `${name.toLowerCase().replace(/\s+/g, '.')}@swrakshak.in`,
+      age: Number(age) || 35,
       dob,
       gender,
       bloodType,
       status,
       initials: name
+        .trim()
         .split(' ')
         .map((n) => n[0])
         .join('')
@@ -938,21 +958,29 @@ export const AddPatientModal: React.FC<AddPatientModalProps> = ({ onClose, onAdd
       vitals: {
         bloodPressure: { value: '120/80', systolic: 120, diastolic: 80, unit: 'mmHg', status: 'Stable' },
         heartRate: { value: 72, unit: 'bpm', status: 'Normal' },
-        weight: { value: 150.0, unit: 'lbs', change: '0.0 lbs' },
+        weight: { value: 70.0, unit: 'kg', change: '0.0 kg' },
         spO2: { value: 99, unit: '%', condition: 'Room Air' },
       },
       clinicalHistory: [
         {
           id: `rec-${Date.now()}`,
           type: 'CLINIC',
-          title: 'Initial Intake Consultation',
+          title: 'Initial Intake & Enrollment Consultation',
           date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
           doctor: 'Dr. Rajesh Sharma',
-          clinicOrLab: 'Cardiovascular Center',
-          summary: 'Initial registration and intake examination completed.',
+          clinicOrLab: 'Cardiovascular & General OPD',
+          summary: complaint || 'Initial clinical enrollment and patient ID creation completed by attending physician.',
           badgeLabel: 'CLINIC',
+          detailedFindings: [
+            `Patient enrolled with unique ID ${assignedId}.`,
+            'Baseline vitals telemetry initialized.',
+            'Access granted to SwRakshak Patient Portal.',
+          ],
+          impression: 'Baseline stable upon doctor registration.',
         },
       ],
+      uploadedLabTests: [],
+      videoConsultations: [],
     };
 
     onAddPatient(newPatient);
@@ -960,72 +988,192 @@ export const AddPatientModal: React.FC<AddPatientModalProps> = ({ onClose, onAdd
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-[#0f0814]/95 rounded-[28px] max-w-md w-full border border-white/15 shadow-[0_25px_60px_rgba(0,0,0,0.85)] overflow-hidden my-8 backdrop-blur-2xl text-white">
-        <div className="bg-gradient-to-r from-purple-900/50 via-purple-800/30 to-orange-950/40 border-b border-white/10 px-6 py-4 flex items-center justify-between">
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-fadeIn">
+      <div className="bg-[#0f0814]/95 rounded-[28px] max-w-lg w-full border border-white/15 shadow-[0_25px_60px_rgba(0,0,0,0.85)] overflow-hidden my-8 backdrop-blur-2xl text-white">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-purple-900/60 via-purple-800/40 to-orange-950/40 border-b border-white/10 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-300">
               <span className="material-symbols-outlined text-[24px]">person_add</span>
             </div>
-            <h3 className="font-headline-md text-base font-bold text-white tracking-wide">
-              Register New Patient
-            </h3>
+            <div>
+              <h3 className="font-headline-md text-base font-bold text-white tracking-wide">
+                Register New Patient & Issue ID
+              </h3>
+              <p className="text-[11px] font-mono text-purple-200/70">
+                Doctor Hub • Patient cannot self-register
+              </p>
+            </div>
           </div>
           <button onClick={onClose} aria-label="Close modal" className="text-white/60 hover:text-white rounded-full p-2 cursor-pointer">
             <span className="material-symbols-outlined text-[20px]">close</span>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        {/* Doctor Policy Banner */}
+        <div className="bg-cyan-950/40 border-b border-cyan-500/20 px-6 py-2.5 flex items-center gap-2 text-xs font-mono text-cyan-200">
+          <span className="material-symbols-outlined text-[18px] text-cyan-400 shrink-0">verified_user</span>
+          <span>Patients cannot register themselves. You are issuing their official Patient Login ID.</span>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+          {/* Highlighted Patient ID & PIN Generation Card */}
+          <div className="bg-gradient-to-br from-purple-950/50 to-indigo-950/40 border border-purple-500/30 rounded-2xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-purple-300 flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[14px]">badge</span>
+                Assigned Patient Login Credentials
+              </span>
+              <button
+                type="button"
+                onClick={handleRegenerateId}
+                className="text-[11px] font-mono text-cyan-300 hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[14px]">refresh</span>
+                New ID
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[10px] font-mono text-white/50 uppercase tracking-wider mb-1">
+                  Unique Patient ID (Used for Login)
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    value={patientId}
+                    onChange={(e) => setPatientId(e.target.value)}
+                    className="w-full pl-3 pr-10 py-2 rounded-xl bg-black/40 border border-purple-400/50 font-mono font-bold text-sm text-cyan-300 focus:outline-none focus:border-cyan-400"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCopyId}
+                    title="Copy Patient ID"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">
+                      {copiedId ? 'done' : 'content_copy'}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-mono text-white/50 uppercase tracking-wider mb-1">
+                  Login Security PIN
+                </label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  required
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-black/40 border border-purple-400/50 font-mono font-bold text-sm text-center text-purple-200 focus:outline-none focus:border-purple-400"
+                />
+              </div>
+            </div>
+
+            <p className="text-[11px] font-mono text-white/50 leading-relaxed">
+              💡 Share this <strong>Patient ID ({patientId})</strong> and PIN ({pin}) with the patient. They will type this ID at the SwRakshak Patient Portal to access their records.
+            </p>
+          </div>
+
+          {/* Patient Details */}
           <div>
-            <label className="block text-[10px] font-mono font-bold text-white/50 uppercase tracking-widest mb-1.5">
-              Full Name
+            <label className="block text-[10px] font-mono font-bold text-white/60 uppercase tracking-widest mb-1">
+              Patient Full Name *
             </label>
             <input
               type="text"
               required
-              placeholder="e.g., Ankit Verma"
+              placeholder="e.g. Suresh Kumar"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full border border-white/15 bg-white/5 rounded-xl p-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-purple-400"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          {/* Contact Details */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[10px] font-mono font-bold text-white/50 uppercase tracking-widest mb-1.5">
+              <label className="block text-[10px] font-mono font-bold text-white/60 uppercase tracking-widest mb-1">
+                Mobile / Phone *
+              </label>
+              <input
+                type="tel"
+                required
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+91 98765-43210"
+                className="w-full border border-white/15 bg-white/5 rounded-xl p-2.5 text-xs text-white font-mono focus:outline-none focus:border-purple-400"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-mono font-bold text-white/60 uppercase tracking-widest mb-1">
+                Email Address (Optional)
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="patient@email.com"
+                className="w-full border border-white/15 bg-white/5 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-purple-400"
+              />
+            </div>
+          </div>
+
+          {/* Age, DOB & Gender */}
+          <div className="grid grid-cols-3 gap-2.5">
+            <div>
+              <label className="block text-[10px] font-mono font-bold text-white/60 uppercase tracking-widest mb-1">
                 Age
               </label>
               <input
                 type="number"
                 value={age}
                 onChange={(e) => setAge(Number(e.target.value))}
-                className="w-full border border-white/15 bg-white/5 rounded-xl p-3 text-sm text-white font-mono focus:outline-none focus:border-purple-400"
+                className="w-full border border-white/15 bg-white/5 rounded-xl p-2 text-xs text-white font-mono focus:outline-none focus:border-purple-400"
               />
             </div>
             <div>
-              <label className="block text-[10px] font-mono font-bold text-white/50 uppercase tracking-widest mb-1.5">
+              <label className="block text-[10px] font-mono font-bold text-white/60 uppercase tracking-widest mb-1">
                 Date of Birth
               </label>
               <input
-                type="text"
+                type="date"
                 value={dob}
                 onChange={(e) => setDob(e.target.value)}
-                placeholder="MM/DD/YYYY"
-                className="w-full border border-white/15 bg-white/5 rounded-xl p-3 text-sm text-white font-mono focus:outline-none focus:border-purple-400"
+                className="w-full border border-white/15 bg-white/5 rounded-xl p-2 text-xs text-white font-mono focus:outline-none focus:border-purple-400"
               />
+            </div>
+            <div>
+              <label className="block text-[10px] font-mono font-bold text-white/60 uppercase tracking-widest mb-1">
+                Gender
+              </label>
+              <select
+                value={gender}
+                onChange={(e) => setGender(e.target.value as any)}
+                className="w-full border border-white/15 bg-[#150b1a] rounded-xl p-2 text-xs text-white focus:outline-none focus:border-purple-400 cursor-pointer"
+              >
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
             </div>
           </div>
 
+          {/* Blood Group & Status */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[10px] font-mono font-bold text-white/50 uppercase tracking-widest mb-1.5">
-                Blood Type
+              <label className="block text-[10px] font-mono font-bold text-white/60 uppercase tracking-widest mb-1">
+                Blood Group
               </label>
               <select
                 value={bloodType}
                 onChange={(e) => setBloodType(e.target.value)}
-                className="w-full border border-white/15 bg-white/5 rounded-xl p-3 text-sm text-white font-mono focus:outline-none focus:border-purple-400 cursor-pointer"
+                className="w-full border border-white/15 bg-[#150b1a] rounded-xl p-2.5 text-xs text-white font-mono focus:outline-none focus:border-purple-400 cursor-pointer"
               >
                 {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map((bt) => (
                   <option key={bt} value={bt} className="bg-[#150b1a] text-white">
@@ -1035,35 +1183,50 @@ export const AddPatientModal: React.FC<AddPatientModalProps> = ({ onClose, onAdd
               </select>
             </div>
             <div>
-              <label className="block text-[10px] font-mono font-bold text-white/50 uppercase tracking-widest mb-1.5">
-                Initial Status
+              <label className="block text-[10px] font-mono font-bold text-white/60 uppercase tracking-widest mb-1">
+                Clinical Status
               </label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as Patient['status'])}
-                className="w-full border border-white/15 bg-white/5 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-purple-400 cursor-pointer"
+                className="w-full border border-white/15 bg-[#150b1a] rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-purple-400 cursor-pointer"
               >
-                <option value="Active" className="bg-[#150b1a] text-white">Active</option>
-                <option value="Stable" className="bg-[#150b1a] text-white">Stable</option>
-                <option value="Critical" className="bg-[#150b1a] text-white">Critical</option>
-                <option value="Pending Lab" className="bg-[#150b1a] text-white">Pending Lab</option>
+                <option value="Active">Active</option>
+                <option value="Stable">Stable</option>
+                <option value="Critical">Critical</option>
+                <option value="Pending Lab">Pending Lab</option>
               </select>
             </div>
+          </div>
+
+          {/* Chief Complaint / Notes */}
+          <div>
+            <label className="block text-[10px] font-mono font-bold text-white/60 uppercase tracking-widest mb-1">
+              Initial Diagnosis / Clinical Intake Note
+            </label>
+            <textarea
+              rows={2}
+              value={complaint}
+              onChange={(e) => setComplaint(e.target.value)}
+              placeholder="e.g. Hypertension management, Routine cardiac screening"
+              className="w-full border border-white/15 bg-white/5 rounded-xl p-2.5 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-purple-400 resize-none"
+            />
           </div>
 
           <div className="pt-3 flex justify-end gap-3 border-t border-white/10">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2 text-xs font-semibold text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-all"
+              className="px-5 py-2 text-xs font-semibold text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-all cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-purple-600 to-orange-500 text-white rounded-full hover:scale-105 active:scale-95 transition-all shadow-lg shadow-purple-900/40 cursor-pointer"
+              className="px-6 py-2.5 text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-purple-600 to-cyan-500 text-white rounded-full hover:scale-105 active:scale-95 transition-all shadow-lg shadow-purple-900/40 cursor-pointer flex items-center gap-1.5"
             >
-              Create Patient Record
+              <span className="material-symbols-outlined text-[16px]">check_circle</span>
+              Enroll Patient & Issue ID
             </button>
           </div>
         </form>
@@ -1426,15 +1589,25 @@ export const PatientLoginModal: React.FC<PatientLoginModalProps> = ({
   onLoginPatient,
   onClose,
 }) => {
-  const [selectedPatientId, setSelectedPatientId] = useState(patients[0]?.id || '');
+  const [patientIdInput, setPatientIdInput] = useState(patients[0]?.id || '');
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
 
-  const targetPatient = patients.find((p) => p.id === selectedPatientId) || patients[0];
+  const targetPatient = patients.find(
+    (p) => p.id.toLowerCase() === patientIdInput.trim().toLowerCase()
+  ) || patients.find((p) => p.phone?.includes(patientIdInput.trim()));
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!targetPatient) return;
+    if (!patientIdInput.trim()) {
+      setError('Please enter your Doctor-Issued Patient ID.');
+      return;
+    }
+
+    if (!targetPatient) {
+      setError(`No patient record found with ID "${patientIdInput}". Patients cannot self-register; your attending doctor must enroll you first.`);
+      return;
+    }
 
     if (pin === (targetPatient.pin || '1234') || pin === '1234') {
       onLoginPatient(targetPatient);
@@ -1447,16 +1620,16 @@ export const PatientLoginModal: React.FC<PatientLoginModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-fadeIn">
       <div className="bg-[#0f0814]/95 rounded-[28px] max-w-md w-full border border-white/15 shadow-[0_25px_60px_rgba(0,0,0,0.85)] overflow-hidden my-8 backdrop-blur-2xl text-white">
-        <div className="bg-gradient-to-r from-purple-900/60 via-purple-800/40 to-orange-950/40 border-b border-white/10 px-6 py-4 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-cyan-950/60 via-purple-900/40 to-indigo-950/40 border-b border-white/10 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-300">
-              <span className="material-symbols-outlined text-[24px]">person</span>
+              <span className="material-symbols-outlined text-[24px]">badge</span>
             </div>
             <div>
               <h3 className="font-headline-md text-base font-bold text-white tracking-wide">
                 Patient Portal Sign In
               </h3>
-              <p className="text-xs font-mono text-cyan-200/60">Access your personal health data & doctor suggestions</p>
+              <p className="text-xs font-mono text-cyan-200/60">Doctor-Issued Patient ID Access</p>
             </div>
           </div>
           <button onClick={onClose} aria-label="Close modal" className="text-white/60 hover:text-white rounded-full p-2 cursor-pointer">
@@ -1464,52 +1637,85 @@ export const PatientLoginModal: React.FC<PatientLoginModalProps> = ({
           </button>
         </div>
 
+        {/* Informational Policy Notice */}
+        <div className="bg-cyan-950/40 border-b border-cyan-500/20 px-6 py-2.5 flex items-center gap-2 text-xs font-mono text-cyan-200">
+          <span className="material-symbols-outlined text-[16px] text-cyan-400 shrink-0">info</span>
+          <span>Patients cannot self-register. Enter the ID assigned by your doctor.</span>
+        </div>
+
         <form onSubmit={handleLogin} className="p-6 space-y-4">
           <div>
-            <label className="block text-[10px] font-mono font-bold text-white/50 uppercase tracking-widest mb-1.5">
-              Select Your Patient Profile
+            <label className="block text-[10px] font-mono font-bold text-white/60 uppercase tracking-widest mb-1.5">
+              Doctor-Issued Patient ID
+            </label>
+            <div className="relative">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-[18px]">
+                badge
+              </span>
+              <input
+                type="text"
+                required
+                value={patientIdInput}
+                onChange={(e) => {
+                  setPatientIdInput(e.target.value);
+                  setError('');
+                }}
+                placeholder="e.g. PID-99821, PID-84721"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white font-mono text-sm focus:outline-none focus:border-cyan-400 uppercase"
+              />
+            </div>
+          </div>
+
+          {/* Quick Picker for Demo Patients */}
+          <div>
+            <label className="block text-[10px] font-mono font-bold text-white/40 uppercase tracking-wider mb-1">
+              Or Select Enrolled Patient ({patients.length})
             </label>
             <select
-              value={selectedPatientId}
+              value={targetPatient ? targetPatient.id : ''}
               onChange={(e) => {
-                setSelectedPatientId(e.target.value);
+                setPatientIdInput(e.target.value);
                 setError('');
               }}
-              className="w-full border border-white/15 bg-white/5 rounded-xl p-3 text-sm text-white font-mono focus:outline-none focus:border-cyan-400 cursor-pointer"
+              className="w-full border border-white/15 bg-[#150b1a] rounded-xl p-2.5 text-xs text-white font-mono focus:outline-none focus:border-cyan-400 cursor-pointer"
             >
               {patients.map((p) => (
                 <option key={p.id} value={p.id} className="bg-[#150b1a] text-white">
-                  {p.name} ({p.id}) - {p.gender}, {p.age}y
+                  {p.name} — ID: {p.id} (Doctor: {p.assignedDoctorName || 'Dr. Rajesh Sharma'})
                 </option>
               ))}
             </select>
           </div>
 
-          <div className="bg-cyan-950/30 border border-cyan-500/20 rounded-2xl p-4 text-xs font-mono space-y-1">
-            <div className="flex justify-between text-white/70">
-              <span>Selected Patient:</span>
-              <strong className="text-white">{targetPatient?.name}</strong>
+          {targetPatient && (
+            <div className="bg-cyan-950/30 border border-cyan-500/20 rounded-2xl p-3.5 text-xs font-mono space-y-1">
+              <div className="flex justify-between text-white/70">
+                <span>Patient Name:</span>
+                <strong className="text-white">{targetPatient.name}</strong>
+              </div>
+              <div className="flex justify-between text-white/70">
+                <span>Verified ID:</span>
+                <strong className="text-cyan-300 font-bold">{targetPatient.id}</strong>
+              </div>
+              <div className="flex justify-between text-white/70">
+                <span>Attending Doctor:</span>
+                <strong className="text-purple-300">{targetPatient.assignedDoctorName || 'Dr. Rajesh Sharma'}</strong>
+              </div>
             </div>
-            <div className="flex justify-between text-white/70">
-              <span>Patient Unique ID:</span>
-              <strong className="text-cyan-300">{targetPatient?.id}</strong>
-            </div>
-            <div className="flex justify-between text-white/70">
-              <span>Treating Doctor:</span>
-              <strong className="text-purple-300">{targetPatient?.assignedDoctorName || 'Dr. Rajesh Sharma'}</strong>
-            </div>
-          </div>
+          )}
 
           <div>
             <div className="flex justify-between items-center mb-1.5">
               <label className="block text-[10px] font-mono font-bold text-white/50 uppercase tracking-widest">
-                Enter Patient Security PIN
+                Security PIN
               </label>
-              <span className="text-[10px] font-mono text-cyan-300">Demo PIN: {targetPatient?.pin || '1234'}</span>
+              <span className="text-[10px] font-mono text-cyan-300">
+                Default PIN: {targetPatient?.pin || '1234'}
+              </span>
             </div>
             <input
               type="password"
-              maxLength={4}
+              maxLength={6}
               required
               value={pin}
               onChange={(e) => {
@@ -1521,13 +1727,13 @@ export const PatientLoginModal: React.FC<PatientLoginModalProps> = ({
             />
           </div>
 
-          {error && <p className="text-xs font-mono text-rose-300 text-center">{error}</p>}
+          {error && <p className="text-xs font-mono text-rose-300 text-center leading-relaxed">{error}</p>}
 
           <div className="pt-2 flex justify-end gap-3 border-t border-white/10">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2 text-xs font-semibold text-white/60 hover:text-white rounded-full transition-all"
+              className="px-5 py-2 text-xs font-semibold text-white/60 hover:text-white rounded-full transition-all cursor-pointer"
             >
               Cancel
             </button>
@@ -1535,7 +1741,7 @@ export const PatientLoginModal: React.FC<PatientLoginModalProps> = ({
               type="submit"
               className="px-6 py-2.5 text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-cyan-600 to-purple-600 text-white rounded-full hover:scale-105 active:scale-95 transition-all shadow-lg cursor-pointer"
             >
-              Access My Health Records
+              Sign In with ID
             </button>
           </div>
         </form>

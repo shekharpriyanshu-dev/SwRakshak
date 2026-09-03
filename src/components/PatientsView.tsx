@@ -35,6 +35,36 @@ export const PatientsView: React.FC<PatientsViewProps> = ({
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6 md:mt-4 space-y-6 pb-28 md:pb-12">
+      {/* Doctor Patient Enrollment Notice Banner */}
+      <div className="bg-gradient-to-r from-purple-950/70 via-indigo-950/50 to-cyan-950/60 border border-purple-500/30 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-300 shrink-0">
+            <span className="material-symbols-outlined text-[24px]">verified_user</span>
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h4 className="text-sm sm:text-base font-bold font-mono text-white">
+                Doctor Patient Enrolment Desk
+              </h4>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-mono font-semibold">
+                Doctor-Assigned ID
+              </span>
+            </div>
+            <p className="text-xs text-white/60 font-mono mt-0.5 leading-relaxed">
+              Patients cannot self-register. Register your patients here and issue their unique Patient ID & PIN for Patient Portal login.
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={onAddNewPatient}
+          className="px-4 py-2.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white font-mono font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all cursor-pointer shrink-0 flex items-center gap-2 hover:scale-105 active:scale-95"
+        >
+          <span className="material-symbols-outlined text-[17px]">person_add</span>
+          Register Patient & Issue ID
+        </button>
+      </div>
+
       {/* Search Section */}
       <section className="space-y-2">
         <div className="relative w-full">
@@ -47,7 +77,7 @@ export const PatientsView: React.FC<PatientsViewProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search by Unique Patient ID (e.g., PID-10293) or Name"
+            placeholder="Search by Unique Patient ID (e.g., PID-99821) or Name"
             className="block w-full pl-12 pr-10 py-3.5 border border-white/10 rounded-2xl bg-white/5 text-white placeholder-white/30 backdrop-blur-xl focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-white/30 font-['Inter'] text-[14px] leading-5 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
           />
           {searchQuery && (
@@ -117,9 +147,10 @@ export const PatientsView: React.FC<PatientsViewProps> = ({
                 className="p-5 hover:bg-white/[0.08] transition-colors cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-3 group"
               >
                 <div>
-                  <div className="flex items-center gap-2.5">
-                    <span className="data-tabular font-mono text-[13px] font-semibold text-purple-300">
-                      {patient.id}
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <span className="data-tabular font-mono text-[12px] font-semibold text-cyan-300 bg-cyan-950/60 px-2.5 py-0.5 rounded-lg border border-cyan-500/40 flex items-center gap-1.5 shadow-sm">
+                      <span className="material-symbols-outlined text-[14px]">badge</span>
+                      Login ID: <strong>{patient.id}</strong>
                     </span>
                     {isActive && (
                       <span className="bg-white/10 text-white/80 border border-white/15 rounded-full px-2.5 py-0.5 font-['Inter'] text-[10px] font-bold uppercase tracking-wider">
